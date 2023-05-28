@@ -1,6 +1,7 @@
 package backend;
 
 public class Grid {
-	//permet 
+	//permet de creer la grille
+	
 
 }
