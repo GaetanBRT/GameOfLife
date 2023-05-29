@@ -11,8 +11,10 @@ import backend.Cell;
 // Examples of useful imports :
 // import java.util.LinkedList;
 // import java.util.ArrayList;
-// import java.util.Random;
+import java.util.Random;
+import java.util.LinkedList;
 
+//import java.util.ArrayList;
 /*/!\ A MODIFIER / PEUT ETRE A MODIFIER
  * Row = y et column = x!!!!
  * la classe cell : mettre les methodes
@@ -31,6 +33,16 @@ public class Simulator extends Thread {
 	private int y;
 	private int cellState[][];
 	private int neighbor;
+	private Random randGenerator;
+	private LinkedList<Tuple> toToggle;
+	private class Tuple { //
+		  public final int x;
+		  public final int y;
+		  public Tuple(int x, int y) { 
+		    this.x = x; 
+		    this.y = y; 
+		  }
+		} 
 	//TODO : add declaration of additional attributes here
 
 	public Simulator(MyInterface mjfParam) {
@@ -39,6 +51,11 @@ public class Simulator extends Thread {
 		pauseFlag=false;
 		loopDelay = 150;
 		//TODO : add other attribute initialization here
+		width = 50;
+		height = 50;
+		cellState = new int[width][height];
+		randGenerator = new Random();
+		toToggle = new LinkedList<Tuple>();		
 
 	}
 	
@@ -48,7 +65,6 @@ public class Simulator extends Thread {
 	 */
 	public int getWidth() {
 		//TODO : correct return
-		width = 50;
 		return width;
 	}
 
@@ -58,7 +74,6 @@ public class Simulator extends Thread {
 	 */
 	public int getHeight() {
 		//TODO : correct return
-		height = 50;
 		return height;
 	}
 	
@@ -97,18 +112,39 @@ public class Simulator extends Thread {
 	 * its state at time t to its state at time t+1
 	 */
 	public int nbOfNeighbors(int x, int y) {
-	// Calcul the number of neighbors of the cell
-		int i = x;
-		int j = y;
-		for(i = i - 1; i <= i + 1; i++) {
-			for(j = j - 1; j <= j + 1; j++) {
-				if(getCell(i, j) == 1) {
-					neighbor = neighbor + 1;
+	// Calculate the number of neighbors of the cell
+		
+		if(isLoopingBorder() == true ) {
+			
+			for(int i = x - 1; i <= x + 1; i++) {
+				if(i >= 0 && i < width) {
+					for(int j = y - 1; j <= y + 1; j++) {
+						if(j >= 0 && j < height) {
+							if(getCell(i, j) == 1) {
+								neighbor = neighbor + 1;
+							}
+						}
+					}
+				}
+			}
+			neighbor -= getCell(x, y);
+		}else{
+			for(int i = x - 1; i <= x + 1; i++) {
+				if(i >= 0 && i < width) {
+					for(int j = y - 1; j <= y + 1; j++) {
+						if(j >= 0 && j < height) {
+							if(getCell(i, j) == 1) {
+								neighbor = neighbor + 1;
+							}
+						}
+					}
+				}else {
+					
 				}
 			}
 		}
-		neighbor -= getCell(x, y);
 		return neighbor;
+		
 	}
 	
 	public void makeStep() {
@@ -120,6 +156,7 @@ public class Simulator extends Thread {
 		 * be it as variables or as attributes you may add to the class Simulator,
 		 * by using their (public) methods.
 		 */
+		
 		for(x = 0; x < height; x++) {
 			for(y = 0; y < width; y++) {
 				/* FAIRE UNE METHOD POUR CHAQUE FONCTION
@@ -131,20 +168,23 @@ public class Simulator extends Thread {
 				 */
 				//creer un objet de la classe
 				
-				//Cell CellX = new Cell();
+				
+				neighbor = nbOfNeighbors(x,y);
 				if(getCell(x, y) == 0) {
-					if(nbOfNeighbors(x, y) == 3) {
-						toggleCell(y, x);
+					if(neighbor == 3) {
+						toToggle.addFirst(new Tuple(x,y));
 					}
 				}else if(getCell(x, y) == 1) {
-					if(nbOfNeighbors(x, y)<2 || nbOfNeighbors(x, y)>3) {
-						toggleCell(y, x);
+					if(neighbor<2 || neighbor>3) {
+						toToggle.addFirst(new Tuple(x,y));
 					}
 				}
 			}
 		}
-		
-		
+		for(Tuple t : toToggle) {
+			toggleCell(t.x, t.y);
+		}
+		toToggle.clear();
 	}
 
 	/**
@@ -163,11 +203,8 @@ public class Simulator extends Thread {
 	public void togglePause() {
 		//TODO : change value of boolean attribute pauseFlag
 		// from false to true, or from true to false
-		if(stopFlag == true) {
-			stopFlag = false;
-		}else {
-			stopFlag = true;
-		}
+			stopFlag = !stopFlag;
+
 	}
 	/**
 	 * Changes content value of the Cell at the coordinates specified in arguments
@@ -247,6 +284,16 @@ public class Simulator extends Thread {
 	 */
 	public void generateRandom(float chanceOfLife) {
 		//TODO implement
+		
+		for(x = 0; x < height; x++) {
+			for(y = 0; y < width; y++) {
+						if (randGenerator.nextFloat() < chanceOfLife) {
+							cellState[x][y] = 1;
+			            } else {
+			            	cellState[x][y] = 0;
+			            }
+			}
+		}
 	}
 	
 	/**
@@ -265,6 +312,7 @@ public class Simulator extends Thread {
 	 */
 	public void toggleLoopingBorder() {
 		//TODO implement
+		
 	}
 	
 	/**
